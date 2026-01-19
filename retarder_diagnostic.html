@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Retarder Diagnostic Tool</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .diagnostic-container {
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 30px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+        .step-card {
+            margin-bottom: 20px;
+            border-left: 5px solid #0d6efd;
+            transition: all 0.3s ease;
+        }
+        .step-card.completed {
+            border-left-color: #198754;
+            background-color: #f8fff9;
+        }
+        .step-card.failed {
+            border-left-color: #dc3545;
+            background-color: #fff8f8;
+        }
+        .step-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 5px 5px 0 0;
+        }
+        .step-body {
+            padding: 20px;
+            border: 1px solid #dee2e6;
+            border-top: none;
+            border-radius: 0 0 5px 5px;
+        }
+        .btn-check:checked + .btn-outline-primary {
+            background-color: #0d6efd;
+            color: white;
+        }
+        .status-badge {
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.8em;
+            font-weight: 600;
+        }
+        .status-pending {
+            background-color: #ffc107;
+            color: #000;
+        }
+        .status-passed {
+            background-color: #198754;
+            color: white;
+        }
+        .status-failed {
+            background-color: #dc3545;
+            color: white;
+        }
+        
+        /* Vehicle Selection Styles */
+        .vehicle-option {
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+            cursor: pointer;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        
+        .vehicle-option:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
+            border-color: var(--primary-color);
+        }
+        
+        .logo-container {
+            height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto;
+            padding: 10px;
+        }
+        
+        .vehicle-logo {
+            max-width: 100%;
+            max-height: 80px;
+            object-fit: contain;
+            transition: all 0.3s ease;
+            filter: grayscale(100%) brightness(0.5) sepia(1) hue-rotate(200deg) saturate(5);
+        }
+        
+        .vehicle-option:hover .vehicle-logo {
+            filter: none;
+            transform: scale(1.1);
+        }
+        
+        .vehicle-option:hover .icon-wrapper {
+            background: rgba(67, 97, 238, 0.2);
+            transform: scale(1.1);
+        }
+        
+        .loading-screen {
+            padding: 3rem 0;
+        }
+        
+        /* Component Location Modal */
+        .component-location {
+            margin-bottom: 2rem;
+            border-left: 4px solid var(--primary-color);
+            padding-left: 1rem;
+        }
+        
+        .component-location h4 {
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
+        
+        .component-image {
+            border-radius: 8px;
+            overflow: hidden;
+            margin: 1rem 0;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .component-image:hover {
+            transform: scale(1.02);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+        
+        .component-image img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+        .instruction-box {
+            background-color: #e9ecef;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            font-weight: 500;
+        }
+        .btn-group-vertical {
+            width: 100%;
+        }
+        .btn-option {
+            text-align: left;
+            margin-bottom: 5px;
+        }
+        .progress {
+            height: 10px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <!-- Welcome Screen -->
+    <div id="welcomeScreen" class="diagnostic-container text-center animate__animated animate__fadeIn">
+        <div class="loading-screen">
+            <div class="spinner-border text-primary mb-4" role="status" style="width: 4rem; height: 4rem;">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <h2 class="mb-4">Welcome to Retarder Diagnostic</h2>
+            <p class="lead mb-5">Please select your vehicle manufacturer to begin</p>
+            
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="vehicle-option card h-100 border-0 shadow-sm" data-vehicle="ashok">
+                        <div class="card-body">
+                            <div class="logo-container mb-3">
+                                <img src="leyland .png.jpg" alt="Ashok Leyland Logo" class="vehicle-logo">
+                            </div>
+                            <h4>Ashok Leyland</h4>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="vehicle-option card h-100 border-0 shadow-sm" data-vehicle="vecv">
+                        <div class="card-body">
+                            <div class="logo-container mb-3">
+                                <img src="eicher.png.png" alt="VECV Logo" class="vehicle-logo">
+                            </div>
+                            <h4>VECV</h4>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="vehicle-option card h-100 border-0 shadow-sm" data-vehicle="tml">
+                        <div class="card-body">
+                            <div class="logo-container mb-3">
+                                <img src="tata.png.png" alt="Tata Motors Logo" class="vehicle-logo">
+                            </div>
+                            <h4>Tata Motors</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Diagnostic Container (initially hidden) -->
+    <div id="mainDiagnostic" class="diagnostic-container" style="display: none;">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="h3 mb-0">Retarder Diagnostic Tool</h1>
+                <small class="text-muted" id="vehicleModel"></small>
+            </div>
+            <button id="showLocations" class="btn btn-outline-primary">
+                <i class="fas fa-map-marker-alt me-2"></i>View Components
+            </button>
+        </div>
+        <div class="progress">
+            <div id="progressBar" class="progress-bar" role="progressbar" style="width: 0%"></div>
+        </div>
+        
+        <div id="diagnosticSteps">
+            <!-- Steps will be dynamically added here -->
+        </div>
+
+        <div id="result" class="mt-4 text-center" style="display: none;">
+            <h3 id="resultMessage" class="mb-3"></h3>
+            <button id="restartBtn" class="btn btn-primary">Start New Diagnostic</button>
+        </div>
+    </div>
+
+    <script>
+        const diagnosticSteps = [
+            {
+                id: 'initial-connections',
+                title: 'Customer Mating Connector',
+                checks: [
+                    { id: 'green1', text: 'Green (24v +Ve)' },
+                    { id: 'black1', text: 'Black (-Ve)' },
+                    { id: 'yellow', text: 'Yellow (7-8v +Ve)' }
+                ],
+                nextStep: 'ecu-speed-box',
+                instruction: 'Locate the customer mating connector behind the odometer.',
+                location: 'Behind the odometer'
+            },
+            {
+                id: 'ecu-speed-box',
+                title: 'ECU Speed Box',
+                checks: [
+                    { id: 'green2', text: 'Green (24v +Ve)' },
+                    { id: 'black2', text: 'Black (-Ve)' },
+                    { id: 'grey', text: 'Grey (7-8v +Ve)' }
+                ],
+                nextStep: 'dashboard-switch',
+                instruction: 'Locate the ECU speed box near the left front firewall.',
+                location: 'Near left front firewall'
+            },
+            {
+                id: 'dashboard-switch',
+                title: 'Dashboard Switch',
+                checks: [
+                    { id: 'violet2', text: 'Violet (24v +Ve)' },
+                    { id: 'pink1', text: 'Pink (24v +Ve)' }
+                ],
+                nextStep: 'air-pressure-switch',
+                instruction: 'Locate the retarder dashboard switch near the driver seat.',
+                location: 'Near driver seat'
+            },
+            {
+                id: 'air-pressure-switch',
+                title: 'Air Pressure Switch Assy',
+                checks: [
+                    { id: 'pink2', text: 'Pink (24v +Ve)' }
+                ],
+                nextStep: 'relay-box',
+                instruction: 'Locate the air pressure switch assy near the left front firewall.',
+                location: 'Near left front firewall'
+            },
+            {
+                id: 'relay-box',
+                title: 'ECU Relay Box',
+                checks: [
+                    { id: 'red2', text: 'Red (24v +Ve)' },
+                    { id: 'white2', text: 'White (24v +Ve)' },
+                    { id: 'orange2', text: 'Orange (24v +Ve)' },
+                    { id: 'brown2', text: 'Brown (24v +Ve)' }
+                ],
+                nextStep: 'final-check',
+                instruction: 'Locate the ECU relay box on the left chassis frame left side of retarder assy.',
+                location: 'Left chassis frame left side of retarder assy'
+            },
+            {
+                id: 'final-check',
+                title: 'Final Verification',
+                checks: [
+                    { id: 'isolator', text: 'Isolator earth terminal (Negative cable connected with chassis properly)' }
+                ],
+                nextStep: 'complete',
+                instruction: 'Final verification:',
+                isFinal: true
+            }
+        ];
+
+        let currentStep = 0;
+        const results = {};
+
+        function initializeDiagnostic() {
+            const container = document.getElementById('diagnosticSteps');
+            container.innerHTML = '';
+            currentStep = 0;
+            results.completed = false;
+            document.getElementById('result').style.display = 'none';
+            updateProgress(0);
+            showStep(0);
+        }
+
+        function showStep(stepIndex) {
+            const container = document.getElementById('diagnosticSteps');
+            container.innerHTML = '';
+            
+            if (stepIndex >= diagnosticSteps.length) {
+                showFinalResult(true);
+                return;
+            }
+
+            const step = diagnosticSteps[stepIndex];
+            const stepElement = document.createElement('div');
+            stepElement.className = 'step-card card mb-4';
+            stepElement.id = step.id;
+            
+            let checksHTML = step.checks.map(check => `
+                <div class="mb-3">
+                    <label class="form-label">${check.text}</label>
+                    <div class="btn-group w-100" role="group">
+                        <input type="radio" class="btn-check" name="${check.id}" id="${check.id}-pass" autocomplete="off" value="pass">
+                        <label class="btn btn-outline-success" for="${check.id}-pass">Working</label>
+                        
+                        <input type="radio" class="btn-check" name="${check.id}" id="${check.id}-fail" autocomplete="off" value="fail">
+                        <label class="btn btn-outline-danger" for="${check.id}-fail">Not Working</label>
+                    </div>
+                </div>
+            `).join('');
+
+            stepElement.innerHTML = `
+                <div class="step-header card-header" data-bs-toggle="collapse" data-bs-target="#${step.id}-body">
+                    <h5 class="mb-0">${step.title}</h5>
+                    <span class="status-badge status-pending">In Progress</span>
+                </div>
+                <div id="${step.id}-body" class="collapse show">
+                    <div class="step-body">
+                        ${step.preCheck ? `<div class="alert alert-info">${step.preCheck}</div>` : ''}
+                        <div class="instruction-box">
+                            <strong>${step.instruction}</strong>
+                        </div>
+                        <form id="${step.id}-form">
+                            ${checksHTML}
+                            <div class="mt-4">
+                                <button type="button" class="btn btn-primary" onclick="validateStep(${stepIndex})">
+                                    ${step.isFinal ? 'Complete Diagnostic' : 'Next Step'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            `;
+
+            container.appendChild(stepElement);
+            updateProgress(stepIndex);
+        }
+
+        function validateStep(stepIndex) {
+            const step = diagnosticSteps[stepIndex];
+            const form = document.getElementById(`${step.id}-form`);
+            const inputs = form.querySelectorAll('input[type="radio"]:checked');
+            
+            // Check if all checks have been answered
+            if (inputs.length !== step.checks.length) {
+                alert('Please complete all checks before proceeding.');
+                return;
+            }
+
+            // Check if any check failed
+            const failedChecks = Array.from(inputs).filter(input => input.value === 'fail');
+            
+            if (failedChecks.length > 0) {
+                const failedCheckIds = failedChecks.map(input => input.name);
+                const failedCheckTexts = step.checks
+                    .filter(check => failedCheckIds.includes(check.id))
+                    .map(check => check.text)
+                    .join('\n- ');
+                
+                if (step.id === 'final-check') {
+                    // Special handling for final check failure
+                    showFinalResult(false, failedCheckTexts);
+                } else {
+                    // For other steps, show failure and stop
+                    document.getElementById(step.id).classList.add('failed');
+                    const statusBadge = document.querySelector(`#${step.id} .status-badge`);
+                    statusBadge.textContent = 'Failed';
+                    statusBadge.className = 'status-badge status-failed';
+                    
+                    // Show failure message
+                    const resultDiv = document.getElementById('result');
+                    resultDiv.style.display = 'block';
+                    document.getElementById('resultMessage').innerHTML = `
+                        <div class="alert alert-danger">
+                            <h4>Diagnostic Failed</h4>
+                            <p>The following checks failed:</p>
+                            <ul>
+                                ${failedChecks.map(input => {
+                                    const check = step.checks.find(c => c.id === input.name.split('-')[0]);
+                                    return `<li>${check.text}</li>`;
+                                }).join('')}
+                            </ul>
+                            <p>Please check the connections and try again.</p>
+                        </div>
+                    `;
+                    
+                    // Scroll to result
+                    resultDiv.scrollIntoView({ behavior: 'smooth' });
+                }
+                return;
+            }
+
+            // If we get here, all checks passed
+            document.getElementById(step.id).classList.add('completed');
+            const statusBadge = document.querySelector(`#${step.id} .status-badge`);
+            statusBadge.textContent = 'Passed';
+            statusBadge.className = 'status-badge status-passed';
+
+            // If this is the final step and all checks passed
+            if (step.isFinal) {
+                showFinalResult(true);
+                return;
+            }
+
+            // Move to next step
+            currentStep++;
+            showStep(currentStep);
+        }
+
+        function showFinalResult(success, failedChecks = '') {
+            const resultDiv = document.getElementById('result');
+            resultDiv.style.display = 'block';
+            
+            if (success) {
+                document.getElementById('resultMessage').innerHTML = `
+                    <div class="alert alert-success">
+                        <h4>Diagnostic Complete!</h4>
+                        <p>All checks passed successfully.</p>
+                        <p class="mb-0">Retarder is working in good condition.</p>
+                    </div>
+                `;
+                updateProgress(100);
+            } else {
+                document.getElementById('resultMessage').innerHTML = `
+                    <div class="alert alert-danger">
+                        <h4>Diagnostic Failed</h4>
+                        <p>The following checks failed:</p>
+                        <ul>
+                            ${failedChecks.split('\n').filter(Boolean).map(check => `<li>${check}</li>`).join('')}
+                        </ul>
+                        <p class="mb-0">Please check the connections and try again. If the issue persists, approach Brakes India Representative.</p>
+                    </div>
+                `;
+            }
+            
+            // Scroll to result
+            resultDiv.scrollIntoView({ behavior: 'smooth' });
+            results.completed = true;
+        }
+
+        function updateProgress(stepIndex) {
+            const progress = (stepIndex / diagnosticSteps.length) * 100;
+            document.getElementById('progressBar').style.width = `${progress}%`;
+            document.getElementById('progressBar').setAttribute('aria-valuenow', progress);
+        }
+
+        // Initialize the diagnostic tool when the page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeDiagnostic();
+            
+            // Add event listener for the restart button
+            document.getElementById('restartBtn').addEventListener('click', initializeDiagnostic);
+        });
+    </script>
+    <!-- Component Location Modal -->
+    <div class="modal fade" id="locationModal" tabindex="-1" aria-labelledby="locationModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="locationModalLabel">Component Locations</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="component-location">
+                        <h4>1. Retarder On/Off Switch</h4>
+                        <p>Located on the dashboard, usually near the steering wheel or center console.</p>
+                        <div class="component-image">
+                            <img src="https://via.placeholder.com/800x400?text=Retarder+Switch+Location" alt="Retarder Switch Location" class="img-fluid">
+                        </div>
+                    </div>
+                    
+                    <div class="component-location">
+                        <h4>2. Air Pressure Switch Assembly</h4>
+                        <p>Typically found near the air tanks or brake system components.</p>
+                        <div class="component-image">
+                            <img src="https://via.placeholder.com/800x400?text=Air+Pressure+Switch+Location" alt="Air Pressure Switch Location" class="img-fluid">
+                        </div>
+                    </div>
+                    
+                    <div class="component-location">
+                        <h4>3. ECU Speed Box</h4>
+                        <p>Usually mounted in the engine compartment or under the dashboard.</p>
+                        <div class="component-image">
+                            <img src="https://via.placeholder.com/800x400?text=ECU+Speed+Box+Location" alt="ECU Speed Box Location" class="img-fluid">
+                        </div>
+                    </div>
+                    
+                    <div class="component-location">
+                        <h4>4. ECU Relay Box</h4>
+                        <p>Located near the main fuse box or in the engine compartment.</p>
+                        <div class="component-image">
+                            <img src="https://via.placeholder.com/800x400?text=ECU+Relay+Box+Location" alt="ECU Relay Box Location" class="img-fluid">
+                        </div>
+                    </div>
+                    
+                    <div class="component-location">
+                        <h4>5. Retarder Assembly</h4>
+                        <p>Mounted on the transmission or driveline of the vehicle.</p>
+                        <div class="component-image">
+                            <img src="https://via.placeholder.com/800x400?text=Retarder+Assembly+Location" alt="Retarder Assembly Location" class="img-fluid">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Initialize the application when DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            // Show welcome screen with animation
+            setTimeout(() => {
+                document.querySelector('.loading-screen .spinner-border').style.display = 'none';
+                document.querySelectorAll('.vehicle-option').forEach(option => {
+                    option.style.opacity = '0';
+                    option.style.transform = 'translateY(20px)';
+                    option.style.display = 'block';
+                    
+                    // Animate each option with a delay
+                    setTimeout(() => {
+                        option.style.transition = 'all 0.5s ease-out';
+                        option.style.opacity = '1';
+                        option.style.transform = 'translateY(0)';
+                    }, 100);
+                });
+            }, 2000);
+
+            // Handle vehicle selection
+            document.querySelectorAll('.vehicle-option').forEach(option => {
+                option.addEventListener('click', function() {
+                    const vehicle = this.getAttribute('data-vehicle');
+                    const vehicleNames = {
+                        'ashok': 'Ashok Leyland',
+                        'vecv': 'VECV',
+                        'tml': 'Tata Motors'
+                    };
+                    
+                    // Animate out the welcome screen
+                    document.getElementById('welcomeScreen').classList.add('animate__fadeOut');
+                    
+                    // Show main diagnostic after animation
+                    setTimeout(() => {
+                        document.getElementById('welcomeScreen').style.display = 'none';
+                        document.getElementById('mainDiagnostic').style.display = 'block';
+                        document.getElementById('vehicleModel').textContent = `Vehicle: ${vehicleNames[vehicle]}`;
+                        
+                        // Initialize the diagnostic tool
+                        initializeDiagnostic();
+                    }, 500);
+                });
+            });
+
+            // Initialize component location modal
+            const locationModal = new bootstrap.Modal(document.getElementById('locationModal'));
+            document.getElementById('showLocations').addEventListener('click', function() {
+                locationModal.show();
+            });
+        });
+    </script>
+</body>
+</html>
